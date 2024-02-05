@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gophish-v1
+  namespace: gophish
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gophish-v1
+  template:
+    metadata:
+      labels:
+        app: gophish-v1
+    spec:
+      containers:
+        - name: gophish-v1
+          image: yourdocker.registry.url/gophish:tag
+          ports:
+            - containerPort: 3333
+              name: admin
+              protocol: TCP
+            - containerPort: 8443
+              name: http
+              protocol: TCP
+          env:
+            - name: ADMIN_LISTEN_URL
+              value: "0.0.0.0:3333"
+            - name: ADMIN_USE_TLS
+              value: "true"
+            - name: ADMIN_CERT_PATH
+              value: "/etc/gophish/certs/tls.crt"
+            - name: ADMIN_KEY_PATH
+              value: "/etc/gophish/certs/tls.key"
+            - name: PHISH_LISTEN_URL
+              value: "0.0.0.0:8443"
+            - name: PHISH_CERT_PATH
+              value: "/etc/gophish/certs/tls.crt"
+            - name: PHISH_KEY_PATH
+              value: "/etc/gophish/certs/tls.key"
+            - name: ADMIN_TRUSTED_ORIGINS
+              value: "gophish-admin.yourdomain.com"
+            - name: PHISH_USE_TLS
+              value: "true"
+            - name: GOPHISH_INITIAL_ADMIN_PASSWORD
+              value: "someRand0MPassw0rd"
+            # the following values DB_NAME and DB_FILE_PATH are if you're setting gophish using mysql.
+            - name: DB_NAME
+              value: mysql
+            - name: DB_FILE_PATH
+              value: >-
+                mysqlusername:MysqlUserPasswd@(10.10.10.10:3306)/dbname?charset=utf8&parseTime=True&loc=UTC
+          volumeMounts:
+            - name: ssl-certs
+              mountPath: "/etc/gophish/certs"
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: 3333
+              scheme: HTTPS
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+            initialDelaySeconds: 70
+            timeoutSeconds: 60
+          livenessProbe:
+            httpGet:
+              path: /login
+              port: 3333
+              scheme: HTTPS
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+            initialDelaySeconds: 70
+            timeoutSeconds: 60
+      volumes:
+        - name: ssl-certs
+          secret:
+            secretName: yourdomain-com-cert

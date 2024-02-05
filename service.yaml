@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gophish-svc
+  namespace: gophish
+  annotations:
+    cloud.google.com/backend-config: '{"ports": {"3333":"gophish-backend-config","8443":"gophish-http-backend-config"}}'
+    cloud.google.com/app-protocols: '{"http":"HTTPS","admin":"HTTPS"}'
+    cloud.google.com/neg: '{"ingress": true}'
+spec:
+  selector:
+    app: gophish-v1
+  ports:
+    - name: admin
+      port: 3333
+      targetPort: 3333
+    - name: http
+      port: 8443
+      targetPort: 8443
+  type: NodePort

@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gophish-ing
+  namespace: gophish
+  annotations:
+    kubernetes.io/ingress.allow-http: "false"
+    kubernetes.io/ingress.global-static-ip-name: external-ip-name
+spec:
+  tls:
+    - hosts:
+        - gophish-admin.yourdomain.com
+        - gophish.yourdomain.com
+      secretName: yourdomain-com-cert
+  rules:
+    - host: gophish-admin.yourdomain.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gophish-svc
+                port:
+                  number: 3333
+    - host: gophish.yourdomain.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gophish-svc
+                port:
+                  number: 8443
